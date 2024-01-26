@@ -1,0 +1,56 @@
+# folder_path = "C:/Users/Ron Levy/OneDrive/Documents/screen captures/screenshots"
+
+from pynput import keyboard
+from pynput.mouse import Listener as MouseListener
+from PIL import ImageGrab
+import os
+import datetime
+from tkinter import filedialog
+from tkinter import *
+
+root = Tk()
+root.withdraw()
+folder_path = filedialog.askdirectory()
+
+start_pos = None
+end_pos = None
+is_selecting = False
+
+def on_click(x, y, button, pressed):
+    global start_pos, end_pos, is_selecting
+
+    if pressed:
+        start_pos = (x, y)
+        is_selecting = True
+    else:
+        end_pos = (x, y)
+        is_selecting = False
+        capture_screenshot(start_pos, end_pos)
+
+def capture_screenshot(start_pos, end_pos):
+    x1, y1 = start_pos
+    x2, y2 = end_pos
+
+    screenshot = ImageGrab.grab(bbox=(min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2)),include_layered_windows=False, all_screens=True)
+    
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    filename = os.path.join(folder_path, f"screenshot_{timestamp}.jpg")
+    screenshot.save(filename, "JPEG")
+    print(f"Screenshot saved as {filename}")
+
+def on_press(key):
+    if key == keyboard.Key.print_screen:
+        print("Select an area for the screenshot")
+        listener = MouseListener(on_click=on_click)
+        listener.start()
+        while is_selecting:
+            pass
+        listener.stop()
+
+def on_release(key):
+    if key == keyboard.Key.esc:
+        return False
+
+# Collect events until released
+with keyboard.Listener(on_press=on_press, on_release=on_release) as listener:
+    listener.join()
