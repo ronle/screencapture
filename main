@@ -1,5 +1,3 @@
-# folder_path = "C:/Users/Ron Levy/OneDrive/Documents/screen captures/screenshots"
-
 from pynput import keyboard
 from pynput.mouse import Listener as MouseListener
 from PIL import ImageGrab
@@ -32,12 +30,14 @@ def capture_screenshot(start_pos, end_pos):
     x2, y2 = end_pos
 
     screenshot = ImageGrab.grab(bbox=(min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2)),include_layered_windows=False, all_screens=True)
-    
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    filename = os.path.join(folder_path, f"screenshot_{timestamp}.jpg")
-    screenshot.save(filename, "JPEG")
-    print(f"Screenshot saved as {filename}")
-
+    try:  
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        filename = os.path.join(folder_path, f"screenshot_{timestamp}.jpg")
+        screenshot.save(filename, "JPEG")
+        print(f"Screenshot saved as {filename}")
+    except Exception:
+       pass
+   
 def on_press(key):
     if key == keyboard.Key.print_screen:
         print("Select an area for the screenshot")
