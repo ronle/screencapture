@@ -1,22 +1,41 @@
 from pynput import keyboard
-from pynput.mouse import Listener as MouseListener
+from pynput import mouse
 from PIL import ImageGrab
 import os
 import datetime
 from tkinter import filedialog
-from tkinter import *
+import tkinter as tk
 
-root = Tk()
-root.withdraw()
-folder_path = filedialog.askdirectory()
+def browse_folder():
+    
+    global folder_path
+    folder_path = filedialog.askdirectory()
+    if folder_path:
+        print(f"Selected Folder: {folder_path}")
+        root.destroy()  # Close the dialog box
+        
 
+# Creating initial dialog box for selecting where to store the files    
+root = tk.Tk()
+root.title("Folder Selection")
+
+prompt_label = tk.Label(root, text="Please select folder to store images in")
+prompt_label.pack(pady=10)
+
+browse_button = tk.Button(root, text="Browse", command=browse_folder)
+browse_button.pack(pady=5)
+
+root.mainloop()
+
+# Initialize global parameters
 start_pos = None
 end_pos = None
 is_selecting = False
 
+# collect mouse beginning selection and end selection events to establish screenshot rectangle coordinates
 def on_click(x, y, button, pressed):
+    
     global start_pos, end_pos, is_selecting
-
     if pressed:
         start_pos = (x, y)
         is_selecting = True
@@ -24,32 +43,38 @@ def on_click(x, y, button, pressed):
         end_pos = (x, y)
         is_selecting = False
         capture_screenshot(start_pos, end_pos)
+        return False
 
+# Captures the screenshot based on beginning and ending coordinates passed by "on_click" function
 def capture_screenshot(start_pos, end_pos):
+    
     x1, y1 = start_pos
     x2, y2 = end_pos
-
-    screenshot = ImageGrab.grab(bbox=(min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2)),include_layered_windows=False, all_screens=True)
     try:  
+        screenshot = ImageGrab.grab(bbox=(min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2)),include_layered_windows=False, all_screens=True)
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         filename = os.path.join(folder_path, f"screenshot_{timestamp}.jpg")
         screenshot.save(filename, "JPEG")
         print(f"Screenshot saved as {filename}")
-    except Exception:
-       pass
-   
+    except Exception as e:
+        print (e)
+        pass
+
 def on_press(key):
+    
     if key == keyboard.Key.print_screen:
         print("Select an area for the screenshot")
-        listener = MouseListener(on_click=on_click)
-        listener.start()
-        while is_selecting:
-            pass
+        with mouse.Listener(on_click=on_click) as listener:
+            listener.join()
         listener.stop()
+  
 
 def on_release(key):
+    
     if key == keyboard.Key.esc:
         return False
+    else:
+        pass
 
 # Collect events until released
 with keyboard.Listener(on_press=on_press, on_release=on_release) as listener:
